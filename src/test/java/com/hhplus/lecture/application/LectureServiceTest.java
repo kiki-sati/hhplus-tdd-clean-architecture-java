@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -28,6 +30,24 @@ class LectureServiceTest {
 		lectureRepository = mock(LectureRepository.class);
 		lectureEnrollmentRepository = mock(LectureEnrollmentRepository.class);
 		lectureService = new LectureService(lectureRepository, lectureEnrollmentRepository);
+	}
+
+	@Test
+	void 강의신청_성공() {
+		Long lectureId = 1L;
+		Long userId = 1L;
+		LocalDate date = LocalDate.of(2024, 10, 1);
+		Lecture lecture = Lecture.create("동시성 제어를 하는 방법", "김키키", date);
+
+		// 강의 존재 설정
+		when(lectureRepository.findById(lectureId)).thenReturn(Optional.of(lecture));
+		when(lectureEnrollmentRepository.findByLectureId(lectureId)).thenReturn(Collections.emptyList());
+		when(lectureEnrollmentRepository.existsByLectureIdAndUserId(lectureId, userId)).thenReturn(false);
+
+		String result = lectureService.enrollInLecture(lectureId, userId, date);
+
+		assertEquals("강의 등록 성공", result);
+		verify(lectureEnrollmentRepository, times(1)).save(any(LectureEnrollment.class));
 	}
 
 	@Test
@@ -114,6 +134,42 @@ class LectureServiceTest {
 
 		assertEquals(ErrorMessage.USER_ALREADY_ENROLLED.getMessage(), exception.getMessage());
 	}
+
+	@Test
+	void 성공_특강목록조회() {
+		// Given
+		Lecture lecture1 = Lecture.create("강의 1", "강사 1", LocalDate.now());
+		Lecture lecture2 = Lecture.create("강의 2", "강사 2", LocalDate.now());
+		when(lectureRepository.findAll()).thenReturn(Arrays.asList(lecture1, lecture2));
+
+		// When
+		List<Lecture> lectures = lectureService.getOpenLectures();
+
+		// Then
+		assertNotNull(lectures);
+		assertEquals(2, lectures.size());
+		assertEquals("강의 1", lectures.get(0).getName());
+		assertEquals("강의 2", lectures.get(1).getName());
+	}
+
+	@Test
+	void 성공_특강신청완료목록조회() {
+		// Given
+		Long userId = 1L;
+		LectureEnrollment enrollment1 = LectureEnrollment.create(1L, userId, LocalDate.now());
+		LectureEnrollment enrollment2 = LectureEnrollment.create(2L, userId, LocalDate.now());
+		when(lectureEnrollmentRepository.findByUserId(userId)).thenReturn(Arrays.asList(enrollment1, enrollment2));
+
+		// When
+		List<LectureEnrollment> enrollments = lectureService.getEnrollmentsByUserId(userId);
+
+		// Then
+		assertNotNull(enrollments);
+		assertEquals(2, enrollments.size());
+		assertEquals(userId, enrollments.get(0).getUserId());
+		assertEquals(userId, enrollments.get(1).getUserId());
+	}
+
 }
 
 
