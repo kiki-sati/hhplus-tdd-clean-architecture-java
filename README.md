@@ -32,7 +32,7 @@
 ├── LectureServiceApplication.java
 ├── application
 │   └── LectureService.java
-├── domian
+├── domain
 │   ├── Lecture.java
 │   ├── LectureEnrollment.java
 │   └── repository
