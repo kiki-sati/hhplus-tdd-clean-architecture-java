@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hhplus.lecture.application.LectureService;
-import com.hhplus.lecture.domian.LectureEnrollment;
+import com.hhplus.lecture.domain.LectureEnrollment;
 import com.hhplus.lecture.interfaces.dto.LectureEnrollmentResponseDto;
 import com.hhplus.lecture.interfaces.dto.LectureRequestDto;
 import com.hhplus.lecture.interfaces.dto.LectureResponseDto;

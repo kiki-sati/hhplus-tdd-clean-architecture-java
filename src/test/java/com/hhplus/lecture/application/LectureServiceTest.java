@@ -12,10 +12,10 @@ import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import com.hhplus.lecture.domian.Lecture;
-import com.hhplus.lecture.domian.LectureEnrollment;
-import com.hhplus.lecture.domian.repository.LectureEnrollmentRepository;
-import com.hhplus.lecture.domian.repository.LectureRepository;
+import com.hhplus.lecture.domain.Lecture;
+import com.hhplus.lecture.domain.LectureEnrollment;
+import com.hhplus.lecture.domain.repository.LectureEnrollmentRepository;
+import com.hhplus.lecture.domain.repository.LectureRepository;
 import com.hhplus.lecture.interfaces.exception.ErrorMessage;
 
 class LectureServiceTest {

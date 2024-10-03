@@ -1,4 +1,4 @@
-package com.hhplus.lecture.domian;
+package com.hhplus.lecture.domain;
 
 import java.time.LocalDate;
 import java.util.HashSet;
