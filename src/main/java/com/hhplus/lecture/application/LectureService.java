@@ -13,11 +13,13 @@ import com.hhplus.lecture.domain.repository.LectureRepository;
 import com.hhplus.lecture.interfaces.exception.ErrorMessage;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * The type Lecture service.
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class LectureService {
 
@@ -33,34 +35,35 @@ public class LectureService {
 	 */
 	@Transactional
 	public String enrollInLecture(Long lectureId, Long userId, LocalDate requestedDate) {
+		synchronized (this) { // 동기화 블록
+			// 강의 존재 확인
+			Lecture lecture = lectureRepository.findById(lectureId)
+				.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.LECTURE_NOT_FOUND.getMessage()));
 
-		// 강의 존재 확인
-		Lecture lecture = lectureRepository.findById(lectureId)
-			.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.LECTURE_NOT_FOUND.getMessage()));
+			// 강의 날짜 확인
+			if (!lecture.getDate().isEqual(requestedDate)) {
+				throw new IllegalArgumentException(ErrorMessage.INVALID_DATE.getMessage());
+			}
 
-		// 강의 날짜 확인
-		if (!lecture.getDate().isEqual(requestedDate)) {
-			throw new IllegalArgumentException(ErrorMessage.INVALID_DATE.getMessage());
+			// 현재 등록된 사용자 수 확인
+			int currentEnrollmentCount = lecture.getRegisteredUsers().size();
+
+			// 최대 수용 인원 초과 여부 확인
+			if (currentEnrollmentCount >= lecture.getMaxCapacity()) {
+				throw new IllegalStateException(ErrorMessage.LECTURE_FULL.getMessage());
+			}
+
+			// 중복 신청 여부 확인
+			if (lecture.getRegisteredUsers().contains(userId)) {
+				throw new IllegalArgumentException(ErrorMessage.USER_ALREADY_ENROLLED.getMessage());
+			}
+
+			// 강의 등록
+			lecture.getRegisteredUsers().add(userId); // 변경된 부분
+			lectureEnrollmentRepository.save(LectureEnrollment.create(lectureId, userId, LocalDate.now()));
+
+			return "강의 등록 성공";
 		}
-
-		// 현재 등록된 사용자 수 확인
-		int currentEnrollmentCount = lectureEnrollmentRepository.findByLectureId(lectureId).size();
-
-		// 최대 수용 인원 초과 여부 확인
-		if (currentEnrollmentCount >= lecture.getMaxCapacity()) {
-			throw new IllegalStateException(ErrorMessage.LECTURE_FULL.getMessage());
-		}
-
-		// 중복 신청 여부 확인
-		if (lectureEnrollmentRepository.existsByLectureIdAndUserId(lectureId, userId)) {
-			throw new IllegalArgumentException(ErrorMessage.USER_ALREADY_ENROLLED.getMessage());
-		}
-
-		// 강의 등록
-		LectureEnrollment enrollment = LectureEnrollment.create(lectureId, userId, LocalDate.now());
-		lectureEnrollmentRepository.save(enrollment);
-
-		return "강의 등록 성공";
 	}
 
 	/**

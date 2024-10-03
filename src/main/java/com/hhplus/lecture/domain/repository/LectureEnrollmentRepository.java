@@ -14,4 +14,5 @@ public interface LectureEnrollmentRepository extends JpaRepository<LectureEnroll
 	boolean existsByLectureIdAndUserId(Long lectureId, Long userId);
 
 	List<LectureEnrollment> findByUserId(Long userId);
+
 }
