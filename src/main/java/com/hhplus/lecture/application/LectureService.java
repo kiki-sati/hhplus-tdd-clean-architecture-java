@@ -36,7 +36,7 @@ public class LectureService {
 	@Transactional
 	public String enrollInLecture(Long lectureId, Long userId, LocalDate requestedDate) {
 		synchronized (this) { // 동기화 블록
-			// 강의 존재 확인
+			// 비관적 락을 통해 강의 조회
 			Lecture lecture = lectureRepository.findById(lectureId)
 				.orElseThrow(() -> new IllegalArgumentException(ErrorMessage.LECTURE_NOT_FOUND.getMessage()));
 

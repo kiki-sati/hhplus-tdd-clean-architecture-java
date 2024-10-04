@@ -9,11 +9,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.hhplus.lecture.domain.Lecture;
-import com.hhplus.lecture.domain.repository.LectureEnrollmentRepository;
 import com.hhplus.lecture.domain.repository.LectureRepository;
 import com.hhplus.lecture.interfaces.exception.ErrorMessage;
 
@@ -26,8 +27,7 @@ class LectureServiceIntegrationTest {
 	@Autowired
 	private LectureRepository lectureRepository;
 
-	@Autowired
-	private LectureEnrollmentRepository lectureEnrollmentRepository;
+	private static final Logger logger = LoggerFactory.getLogger(LectureServiceIntegrationTest.class);
 
 	/**
 	 * 동시에 동일한 특강에 대해 40명이 신청했을 때, 30명만 성공하는 것을 검증
@@ -35,17 +35,17 @@ class LectureServiceIntegrationTest {
 	 */
 	@Test
 	void 강의신청_동시성_테스트() throws InterruptedException {
-		Long lectureId = 1L; // 기존 강의 ID
+		Long lectureId = 21L; // 기존 강의 ID
 		LocalDate requestedDate = LocalDate.of(2024, 10, 4); // 강의 날짜
 		AtomicInteger successCount = new AtomicInteger(0); // 성공한 등록 수 카운터
 
 		Runnable task = () -> {
 			try {
-				// 사용자 ID를 고유하게 생성
 				Long userId = Thread.currentThread().getId(); // 스레드 ID를 사용자 ID로 사용
 				lectureService.enrollInLecture(lectureId, userId, requestedDate);
 				successCount.incrementAndGet(); // 성공한 경우 카운트 증가
 			} catch (Exception e) {
+				logger.error("Error enrolling in lecture: ", e); // 에러 로그 추가
 			}
 		};
 
@@ -62,8 +62,9 @@ class LectureServiceIntegrationTest {
 			thread.join();
 		}
 
-		// 성공한 등록 수가 30 이하여야 함
-		assertThat(successCount.get()).isLessThanOrEqualTo(30);
+		// 성공한 등록 수가 정확히 30이어야 함
+		logger.info("successCount:{}", successCount);
+		assertThat(successCount.get()).isEqualTo(30); // 성공한 등록 수가 30이어야 함
 	}
 
 	@Test
